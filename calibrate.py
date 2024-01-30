@@ -81,15 +81,10 @@ class ECELoss(nn.Module):
         return temperature_raw
     
     def calibrate_cdkt(self, logits, labels):
-        # temperature_raw = torch.ones(1, requires_grad=True, device="cuda", dtype=torch.float64) * 0.4
-        # temperature_raw = nn.Parameter(temperature_raw)
-        # nll_criterion = nn.CrossEntropyLoss().cuda()
         temperature_list = torch.cat((torch.arange(0.05, 0.35, 0.005), torch.arange(1, 2, 0.005)), 0)
-        # temperature_list = torch.arange(0.05, 0.35, 0.005)
         iterations = len(temperature_list)
         ece_list = []
         mce_list = []
-        # optimizer = torch.optim.SGD([temperature_raw], lr=lr, momentum=0.9)
         for i in range(iterations):
             for j in range(iterations):
                 # if torch.is_grad_enabled(): optimizer.zero_grad()
@@ -145,8 +140,6 @@ class ECELoss(nn.Module):
 
 
 def plot_calibration_error(logits, targets, temperature, params, name):
-    # confidences = F.softmax(logits, -1).max(-1).values.detach().numpy()
-    # accuracies = logits.argmax(-1).eq(targets).numpy()
     logits_scaled = logits / temperature
     softmaxes = torch.softmax(logits_scaled, dim=1)
 
@@ -191,36 +184,28 @@ def plot_calibration_error(logits, targets, temperature, params, name):
     else:
         c = "#008000"
         
-    matplotlib.rcParams['font.family'] = ['monospace']
-    fig = plt.figure(figsize=(3, 3))
-    ax = fig.add_axes([0, 0, 1, 1])
-    plt.bar(
-        bin_lowers, plot_acc, bin_uppers[0], align="edge", linewidth=1, edgecolor="k", color=c, alpha=0.6
-    )
-    # plt.xticks = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
-    # plt.yticks = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
-    plt.xticks([0, 0.2, 0.4, 0.6, 0.8, 1.0], fontsize=12)
-    plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0], fontsize=12)
+    plt.xticks([0.2, 0.4, 0.6, 0.8, 1.0], fontsize=20)
+    plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0], fontsize=20)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)    
     plt.plot([0.0, 1.0], [0.0, 1.0], c="black", lw=1)
     matplotlib.rcParams['font.family'] = ['monospace']
     props = dict(boxstyle='round', facecolor='white', alpha=1.)
     plt.text(
-        0.58,
-        0.05,
+        0.40,
+        0.06,
         "ECE: {:0.4f}\nMCE: {:0.4f}".format(
             ece, max_err
         ),
-        fontsize=12,
+        fontsize=18,
         bbox=props
     )
     print("ECE: {:0.4f}\nMCE: {:0.4f}\nBRI: {:0.4f}".format(
             ece, max_err, bri
         ))
 
-    plt.xlabel("Confidence", fontsize=15)
-    plt.ylabel("Accuracy", fontsize=15)
+    plt.xlabel("Confidence", fontsize=20)
+    plt.ylabel("Accuracy", fontsize=20)
     matplotlib.rcParams['font.family'] = ['monospace']
     plt.savefig("{}.svg".format(name), bbox_inches="tight")
 
@@ -396,16 +381,6 @@ def main():
     params = parse_args('test')
     seed = params.seed
     repeat = params.repeat
-
-    # params.steps = 3
-    # params.loss = "ELBO"
-    # params.n_shot = 5
-    # params.method = "MD"
-    # params.train_aug = True
-    # params.dataset = "cross"
-    # params.tau = 0.2
-    # params.seed = 1
-    # params.mean = -10.
     
     # 1. Find the value of temperature (calibration)    
     print("Calibration: finding temperature hyperparameter...")
@@ -414,7 +389,6 @@ def main():
     logits, targets = get_logits_targets(params, validation=True)
     logits = logits.double()
     temperature_likelihood_1, temperature_1, temperature_likelihood_2, temperature_2 = ece_module.calibrate_cdkt(logits, targets)
-    # temperature_likelihood_1, temperature_1, temperature_likelihood_2, temperature_2 = 1.1, 0.195, 1.035, 0.205
 
     # 2. Use the temperature to record the ECE
     # repeat the test N times changing the seed in range [seed, seed+repeat]
@@ -424,7 +398,6 @@ def main():
     logits, targets = get_logits_targets(params, validation=False)
     logits = logits.double()
     C = logits.shape[1]
-    # all_samples = torch.sigmoid(logits / temperature_likelihood_1)
     all_samples = torch.exp(logits / temperature_likelihood_1)
     all_samples = all_samples / all_samples.sum(dim=1, keepdim=True).repeat(1, C, 1)
     # classes, query points
@@ -433,7 +406,6 @@ def main():
     torch.save(avg, params.dataset + '_' + str(temperature_1) + '_avg.pt')
     plot_calibration_error(torch.log(avg).T.cpu(), targets.cpu(), temperature_1, params, 'minmce')
     
-    # all_samples = torch.sigmoid(logits / temperature_likelihood_2)
     all_samples = torch.exp(logits / temperature_likelihood_2)
     all_samples = all_samples / all_samples.sum(dim=1, keepdim=True).repeat(1, C, 1)
     # classes, query points
