@@ -18,7 +18,7 @@ Installation
 pip install numpy torch torchvision gpytorch h5py pillow
 ```
 
-We confirm that the following configuration worked for us: numpy 1.22.4, torch 1.11.0, torchvision 0.12.0, gpytorch 1.9.0, h5py 3.4.0, pillow 9.1.1
+We confirm that the following configuration worked for us: numpy 1.22.4, torch 1.11.0, torchvision 0.12.0, gpytorch 1.9.0, h5py 3.4.0, pillow 9.1.1.
 
 MD-BSFC: code of our method
 --------------------------
