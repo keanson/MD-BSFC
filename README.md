@@ -23,7 +23,7 @@ We confirm that the following configuration worked for us: numpy 1.22.4, torch 1
 MD-BSFC: code of our method
 --------------------------
 
-**Classification.** The code for the classification case is accessible in [MD.py](./methods/MD.py), with most of the important pieces contained in the `train_loop()` method (training), and in the `correct()` method (testing). 
+**Classification.** The code for the classification case is accessible in [mirror.py](./methods/mirror.py), with most of the important pieces contained in the `train_loop()` method (training), and in the `correct()` method (testing). 
 
 Experiments
 ============
