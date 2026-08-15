@@ -412,7 +412,7 @@ class MD(MetaTemplate):
         # compute gradients
         grad_m = torch.mean(y - torch.exp(fn) / torch.exp(fn).sum(dim=2, keepdim=True), dim=0)
         grad_v = 0.5 * torch.mean(torch.exp(2 * fn) / (torch.exp(fn).sum(dim=2, keepdim=True)) ** 2 - torch.exp(fn) / torch.exp(fn).sum(dim=2, keepdim=True), dim=0)
-        grad_mu = grad_m - 2 * grad_m * grad_v
+        grad_mu = grad_m - 2 * vi_mean.T * grad_v
         return grad_mu, grad_v   
     
     def MirrorPredictiveLoglikelihood(self, y_support, z_support, y_query, z_query, steps=2, REQUIRES_GRAD=False, times=1000, tau=1, rho=1):
